@@ -1,0 +1,61 @@
+- MVC é nada mais que um padrão de arquitetura de software, separando sua aplicação em 3 camadas. A camada de interação do usuário(view), a camada de manipulação dos dados(model) e a camada de controle(controller).
+
+- para o padrão MVC funcionar precisamos de um sistema gerenciador de class para que assim podemos utilizar o autoloader para requisitar com mais eficiência os arquivos do sistema  . (composer)
+
+- na organização no projeto precisamos dos seguintes funcionalidades para permitir melhor eficiência do sistema:
+
+1 - O projeto se inicia no diretório público, onde o script inicial "index.php" é responsável por dar um require_once do arquivo de iniciação do composer "autoload.php". No mesmo script, um objeto qualquer é instanciado na classe Route do arquivo Route.php, contido na pasta App, mas que é puxado automaticamente através da referência do seu namespace App\Route, graças ao Composer. Uma vez instanciado um objeto na classe Route, toda a aplicação passa a receber um start, devido aos métodos __construct() das classes da mesma.
+
+2 - A classe Route possui um array contendo as rotas possíveis de serem acessadas pelo usuário, cada rota possível de ser acessada pelo usuário, possui uma URL, um script e uma ação possível (podendo duas rotas diferentes, acessarem um mesmo script, porém executarem métodos diferentes) e também possui um método que seta o valor da rota a ser trabalhada pela classe pai, Bootstrap.
+
+- A classe Route descende da classe Boostrap (um termo reservado aos arquivos de inicialização).
+
+- A classe Bootstrap possui a lógica para pegar a rota acessada pelo usuário, que pode ser "index.php" ou "index.php/sobre_nos" e, através de um objeto instanciado na classe IndexControllre, executar o método correspondente à rota acessada pelo usuário.
+
+* Router: arquivo utilizado para armazenar as rotas da aplicação, ele verificar o que o usuários esta tentando acessa para   encaminhar-lo para o arquivo escolhido . exemplo: o usuário digitou  https://www.udemy.com/curso, o router vai pegar o valor depois da barra que seria o "curso" e a partir disso  redirecionar o usuário para o arquivo que contem os cursos.
+
+3 - A classe IndexController descende de Action e é responsável por, com base no método correspondente à rota acessada, exibir ao cliente a página/tela/view correta, já contendo a informação dinâmica correspondente, ou seja, já contendo a informação armazenada pelo Banco de Dados.
+
+- Para saber qual é a informação correspondente à rota acessada, é preciso instanciar a classe de modelo de acesso ao Banco de Dados correspondente à rota acessada, por isso o IndexController, em qualquer um de seus actions, primeiro instancia um objeto na classe Container, executando a função "getModel()", passando como parâmetro o modelo de acesso à base de dados desejada.
+
+- pasta Controller: contem os controladores que permitem acessa os arquivos requisitados a partir do arquivo router, a grosso modo esse arquivo contem os caminhos aonde estão os views e os dados do banco da aplicação.  por exemplo : o usuário esta requisitando ver os cursos disponíveis  no momento a partir da funcionalidade solicitada pelo router que seria o curso, então o Controller inicia o caminho aonde localiza os dados e os views.
+
+- A classe Container, por sua vez, retorna o modelo desejado e com a conexão já estabelecida. Para isso, ela primeiro instancia um objeto na classe desejada, depois retorna esse objeto com um objeto do tipo PDO contendo a conexão com o Banco de Dados como parâmetro.
+
+- A classe Container descende da classe Connection, que é responsável por realizar a conexão com o Banco de Dados e retornar um objeto PDO contendo os dados dessa conexão, além de tratar quaisquer falhas ocorridas na mesma.
+
+- Quer uma das classes modelo possíveis, executa uma consulta SQL no Banco de Dados e retorna um array contendo os dados requisitados.
+
+- Todos os modelos descendem da classe Model, que simplesmente cria um atributo do tipo objeto e vazio para se utilizado pelas classes filhas.
+
+- Com o objeto instanciado no modelo correto e já com a conexão estabelecida, a classe IndexController armazena em um atributo de classe "$this->view->dados" o valor array contendo os dados, retornado pela classe modelo respectiva.
+
+ - Em seguida, a action da classe IndexController, executa uma função para renderizar a página requisitada no navegador do usuário, já com os dados recuperados pelo Banco de Dados. Pra isso, executa-se o método "$this->render()" da classe IndexController, graças à sua descendência da classe Action, passando como parâmetro, qual a view desejada e qual o layout desejado, supondo que uma mesma informação possa ser exibida de diversas formas, dependendo, por exemplo, da data comemorativa em questão.
+
+ - A classe Action, por sua vez, cria o objeto "$this->view" para trabalhar com as informações de renderização , como a página desejada, o layout desejado e o conteúdo que será exibido. É, portanto, responsável pela lógica que produz o contéúdo visualizado pelos usuários.
+
+ - O método "render()", recebe como parâmetro a URL requisitada e o layout especificado.
+
+Primeiramente, o método grava o valor da página desejada em "$this->view->page", depois realiza um teste para saber se o layout requisitado pela aplicação, de fato existe.
+
+Caso exista, será realizado um require_once do layout desejado.
+
+Caso não exista, será executado a função de exibição de conteúdo: content().
+
+- Os layouts são arquivos que formam a base para as views, ou seja, as páginas visualizadas pelos usuários, serão os layouts da aplicação, contendo a informação dinâmica contida nas views e são a responsáveis por formar a identidade visual da aplicação. Dentro de cada layout, entre o código HTML, haverão trechos de código PHP que executará a função $this->content() para exibir informações dinâmicas.
+
+- O método content() é responsável por pegar o nome da classe e extrair dela o caminho correto ao conteúdo desejado. Extraindo "index" de IndexController, para exibir as duas views possíveis do projeto, que estão contidas na pasta App/Views/index.
+
+Em seguida, é realizado um require_once da view desejada.
+
+4 - As views são arquivos phtml iguais aos layouts, com a diferença de que não são páginas html completas, mas apenas trechos de código html com conteúdo dinâmico PHP embutido, como dados recuperados de um Banco de Dados, por exemplo.
+
+- pasta Views: contem as Templates da aplicação  que serão responsáveis por exibir as informações solicitadas. por exemplo: o controller solicitou a partir das informações colidas pelo router exibir a template que lista os curso disponiveis.
+
+
+
+5 - Pasta models: contem os comandos de sql responsável por inserir, atualizar, listar e deletar os objetos  que estão no banco. por exemplo: quando o controller recebeu as informações do router e ativou o caminho solicitado, ele também   requisitou para o model a função mais adequada a funcionalidade solicitada, que seria lista os cursos disponíveis a partir disso ele ativou a funcionalidade do model  responsável por selecionar os curso no banco de dados.
+
+
+
+6 - Connection : arquivo responsável por iniciar a conexão ao banco de dados.
